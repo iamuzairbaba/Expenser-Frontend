@@ -23,23 +23,22 @@ export default function GlobalState({ children }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((updatedUser) => {
+    setUser((prev) => ({ ...prev, ...updatedUser }));
+  }, []);
+
   useEffect(() => {
     async function restoreSession() {
-      if (!token) {
-        setIsAuthReady(true);
-        return;
-      }
-
+      if (!token) { setIsAuthReady(true); return; }
       try {
         const session = await api.me(token);
         setUser(session.user);
-      } catch (sessionError) {
+      } catch {
         logout();
       } finally {
         setIsAuthReady(true);
       }
     }
-
     restoreSession();
   }, [logout, token]);
 
@@ -72,8 +71,10 @@ export default function GlobalState({ children }) {
       login: (payload) => runAuth(api.login, payload),
       googleLogin: (credential) => runAuth(api.googleLogin, credential),
       logout,
+      updateUser,
+      clearError: () => setError(""),
     }),
-    [error, isAuthReady, isLoading, logout, runAuth, token, user]
+    [error, isAuthReady, isLoading, logout, runAuth, token, user, updateUser]
   );
 
   return <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>;

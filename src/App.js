@@ -1,23 +1,60 @@
-import { Spinner, Flex } from "@chakra-ui/react";
+import { Box, Flex, Spinner, Text, useColorModeValue } from "@chakra-ui/react";
 import { useContext, useState } from "react";
 import "./App.css";
 import AppShell from "./components/layout/AppShell";
 import Auth from "./components/auth/Auth";
+import Onboarding from "./components/onboarding/Onboarding";
 import { GlobalContext } from "./context";
 import { useAppData } from "./hooks/useAppData";
 import Budget from "./pages/Budget";
 import Categories from "./pages/Categories";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
+import Settings from "./pages/settings/Settings";
 import Transactions from "./pages/Transactions";
+
+function GlobalLoadingOverlay({ isLoading }) {
+  const overlayBg = useColorModeValue("rgba(248,250,252,0.7)", "rgba(11,17,32,0.7)");
+  const textColor = useColorModeValue("gray.600", "gray.300");
+  return (
+    <Box
+      position="fixed"
+      inset={0}
+      bg={overlayBg}
+      backdropFilter="blur(2px)"
+      zIndex={100}
+      display={isLoading ? "flex" : "none"}
+      alignItems="center"
+      justifyContent="center"
+      pointerEvents={isLoading ? "all" : "none"}
+    >
+      <Flex direction="column" align="center" gap={3}>
+        <Spinner size="lg" color="brand.500" thickness="3px" speed="0.65s" />
+        <Text fontSize="sm" fontWeight="600" color={textColor}>Loading...</Text>
+      </Flex>
+    </Box>
+  );
+}
 
 function AuthedApp() {
   const { user, logout } = useContext(GlobalContext);
   const [activePage, setActivePage] = useState("dashboard");
   const data = useAppData();
 
+  // Show onboarding if not completed
+  if (!user?.onboardingCompleted) {
+    return <Onboarding />;
+  }
+
   const page = {
-    dashboard: <Dashboard analytics={data.analytics} isLoading={data.isLoading} />,
+    dashboard: (
+      <Dashboard
+        analytics={data.analytics}
+        isLoading={data.isLoading}
+        budget={data.budget}
+        transactions={data.transactions}
+      />
+    ),
     transactions: (
       <Transactions
         transactions={data.transactions}
@@ -36,26 +73,34 @@ function AuthedApp() {
       />
     ),
     reports: <Reports analytics={data.analytics} transactions={data.transactions} />,
-  }[activePage];
+    settings: <Settings transactions={data.transactions} onLogout={logout} />,
+  }[activePage] || null;
 
   return (
-    <AppShell user={user} activePage={activePage} onPageChange={setActivePage} onLogout={logout}>
-      {page}
-    </AppShell>
+    <>
+      <GlobalLoadingOverlay isLoading={data.isLoading} />
+      <AppShell user={user} activePage={activePage} onPageChange={setActivePage} onLogout={logout}>
+        {page}
+      </AppShell>
+    </>
+  );
+}
+
+function AppLoader() {
+  const bg = useColorModeValue("#f8fafc", "#0b1120");
+  return (
+    <Flex minH="100vh" align="center" justify="center" bg={bg}>
+      <Flex direction="column" align="center" gap={3}>
+        <Spinner size="xl" color="brand.500" thickness="3px" />
+        <Text fontSize="sm" fontWeight="600" color="gray.500">Starting Expenser...</Text>
+      </Flex>
+    </Flex>
   );
 }
 
 function App() {
   const { user, isAuthReady } = useContext(GlobalContext);
-
-  if (!isAuthReady) {
-    return (
-      <Flex minH="100vh" align="center" justify="center">
-        <Spinner size="xl" color="blue.500" />
-      </Flex>
-    );
-  }
-
+  if (!isAuthReady) return <AppLoader />;
   return user ? <AuthedApp /> : <Auth />;
 }
 
