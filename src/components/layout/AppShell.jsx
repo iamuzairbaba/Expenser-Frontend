@@ -5,7 +5,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import {
   FiBarChart2, FiCreditCard, FiGrid, FiLogOut,
-  FiMoon, FiPieChart, FiSettings, FiSun, FiTag,
+  FiMoon, FiPieChart, FiSettings, FiSun, FiTag, FiZap,
 } from "react-icons/fi";
 import Logo from "../brand/Logo";
 
@@ -18,6 +18,7 @@ const nav = [
   { id: "budget", label: "Budget", icon: FiPieChart },
   { id: "reports", label: "Reports", icon: FiBarChart2 },
   { id: "settings", label: "Settings", icon: FiSettings },
+  { id: "pricing", label: "Plans", icon: FiZap },
 ];
 
 function NavItem({ item, active, onClick }) {

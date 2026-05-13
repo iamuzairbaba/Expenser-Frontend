@@ -9,6 +9,7 @@ import { useAppData } from "./hooks/useAppData";
 import Budget from "./pages/Budget";
 import Categories from "./pages/Categories";
 import Dashboard from "./pages/Dashboard";
+import Pricing from "./pages/Pricing";
 import Reports from "./pages/Reports";
 import Settings from "./pages/settings/Settings";
 import Transactions from "./pages/Transactions";
@@ -41,8 +42,10 @@ function AuthedApp() {
   const [activePage, setActivePage] = useState("dashboard");
   const data = useAppData();
 
-  // Show onboarding if not completed
-  if (!user?.onboardingCompleted) {
+  // Show onboarding only for brand-new users.
+  // Existing users (onboardingCompleted undefined OR true) go straight to dashboard.
+  const needsOnboarding = user?.onboardingCompleted === false;
+  if (needsOnboarding) {
     return <Onboarding />;
   }
 
@@ -61,9 +64,10 @@ function AuthedApp() {
         categories={data.categories}
         filters={data.filters}
         actions={data.actions}
+        onUpgrade={() => setActivePage("pricing")}
       />
     ),
-    categories: <Categories categories={data.categories} actions={data.actions} />,
+    categories: <Categories categories={data.categories} actions={data.actions} onUpgrade={() => setActivePage("pricing")} />,
     budget: (
       <Budget
         month={data.month}
@@ -72,8 +76,9 @@ function AuthedApp() {
         actions={data.actions}
       />
     ),
-    reports: <Reports analytics={data.analytics} transactions={data.transactions} />,
+    reports: <Reports analytics={data.analytics} transactions={data.transactions} onUpgrade={() => setActivePage("pricing")} />,
     settings: <Settings transactions={data.transactions} onLogout={logout} />,
+    pricing: <Pricing onClose={() => setActivePage("settings")} />,
   }[activePage] || null;
 
   return (

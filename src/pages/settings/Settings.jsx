@@ -93,6 +93,12 @@ function ProfileSection({ user, token, onUpdate }) {
               <Badge mt={1} colorScheme={user?.provider === "google" ? "blue" : "gray"} fontSize="9px">
                 {user?.provider === "google" ? "Google Account" : "Email Account"}
               </Badge>
+              <Badge mt={1} ml={1}
+                colorScheme={user?.plan?.tier === "pro" ? "purple" : user?.plan?.tier === "tracker" ? "blue" : "gray"}
+                fontSize="9px"
+              >
+                {user?.plan?.tier === "pro" ? "Expenser Pro" : user?.plan?.tier === "tracker" ? "Expenser Tracker" : "Expenser Free"}
+              </Badge>
             </Box>
           </Flex>
           <Divider />

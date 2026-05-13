@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <defs>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <!-- Card base -->
+  <rect x="3" y="8" width="34" height="24" rx="7" fill="url(#a)"/>
+  <!-- Chip -->
+  <rect x="8" y="15" width="9" height="7" rx="2" fill="rgba(255,255,255,0.3)"/>
+  <rect x="9.5" y="16.5" width="2" height="4" rx="0.5" fill="rgba(255,255,255,0.6)"/>
+  <rect x="12.5" y="16.5" width="2" height="4" rx="0.5" fill="rgba(255,255,255,0.6)"/>
+  <!-- Trend line -->
+  <polyline points="8,27 13,22 18,25 24,18 32,14" stroke="url(#b)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Peak dot -->
+  <circle cx="32" cy="14" r="2.5" fill="#22c55e"/>
+</svg>

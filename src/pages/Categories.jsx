@@ -24,8 +24,10 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
+import { GlobalContext } from "../context";
+import UpgradePrompt from "../components/ui/UpgradePrompt";
 
 const MotionBox = motion(Box);
 
@@ -37,7 +39,7 @@ const PRESET_COLORS = [
   "#06b6d4", "#a855f7",
 ];
 
-function CategoryCard({ category, onEdit, onDelete, isDeleting }) {
+function CategoryCard({ category, onEdit, onDelete, isDeleting, canCustomize }) {
   const bg = useColorModeValue("white", "#111827");
   const border = useColorModeValue("gray.100", "whiteAlpha.100");
 
@@ -87,15 +89,17 @@ function CategoryCard({ category, onEdit, onDelete, isDeleting }) {
         </Flex>
 
         <HStack spacing={1}>
-          <IconButton
-            aria-label="Edit"
-            icon={<FiEdit2 />}
-            size="xs"
-            variant="ghost"
-            borderRadius="6px"
-            onClick={() => onEdit(category)}
-          />
-          {!category.isDefault && (
+          {canCustomize && (
+            <IconButton
+              aria-label="Edit"
+              icon={<FiEdit2 />}
+              size="xs"
+              variant="ghost"
+              borderRadius="6px"
+              onClick={() => onEdit(category)}
+            />
+          )}
+          {canCustomize && !category.isDefault && (
             <IconButton
               aria-label="Delete"
               icon={<FiTrash2 />}
@@ -113,7 +117,9 @@ function CategoryCard({ category, onEdit, onDelete, isDeleting }) {
   );
 }
 
-export default function Categories({ categories, actions }) {
+export default function Categories({ categories, actions, onUpgrade }) {
+  const { user } = useContext(GlobalContext);
+  const canCustomize = ["tracker", "pro"].includes(user?.plan?.tier || "free");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [form, setForm] = useState(empty);
   const [editingId, setEditingId] = useState("");
@@ -165,9 +171,13 @@ export default function Categories({ categories, actions }) {
         <Text fontSize="xs" color={mutedColor} fontWeight="600" textTransform="uppercase" letterSpacing="0.08em">
           {categories.length} categories
         </Text>
-        <Button leftIcon={<FiPlus />} colorScheme="brand" size="sm" borderRadius="8px" onClick={openNew}>
-          New Category
-        </Button>
+        {canCustomize ? (
+          <Button leftIcon={<FiPlus />} colorScheme="brand" size="sm" borderRadius="8px" onClick={openNew}>
+            New Category
+          </Button>
+        ) : (
+          <UpgradePrompt feature="Custom categories" plan="tracker" onUpgrade={onUpgrade} compact />
+        )}
       </Flex>
 
       {/* Expense categories */}
@@ -180,7 +190,7 @@ export default function Categories({ categories, actions }) {
         {expenseCategories.length > 0 ? (
           <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={3}>
             {expenseCategories.map((c) => (
-              <CategoryCard key={c._id} category={c} onEdit={openEdit} onDelete={handleDelete} isDeleting={deletingId} />
+              <CategoryCard key={c._id} category={c} onEdit={openEdit} onDelete={handleDelete} isDeleting={deletingId} canCustomize={canCustomize} />
             ))}
           </SimpleGrid>
         ) : (
@@ -200,7 +210,7 @@ export default function Categories({ categories, actions }) {
         {incomeCategories.length > 0 ? (
           <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={3}>
             {incomeCategories.map((c) => (
-              <CategoryCard key={c._id} category={c} onEdit={openEdit} onDelete={handleDelete} isDeleting={deletingId} />
+              <CategoryCard key={c._id} category={c} onEdit={openEdit} onDelete={handleDelete} isDeleting={deletingId} canCustomize={canCustomize} />
             ))}
           </SimpleGrid>
         ) : (

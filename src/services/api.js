@@ -1,15 +1,15 @@
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-async function request(path, { method = "GET", body, token } = {}) {
+async function request(path, { method = "GET", body, token, isFormData = false } = {}) {
   let response;
   try {
+    const headers = {};
+    if (!isFormData) headers["Content-Type"] = "application/json";
+    if (token) headers["Authorization"] = `Bearer ${token}`;
     response = await fetch(`${API_URL}${path}`, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: body ? JSON.stringify(body) : undefined,
+      headers,
+      body: isFormData ? body : body ? JSON.stringify(body) : undefined,
     });
   } catch {
     throw new Error(`Cannot connect to the backend at ${API_URL}. Start the backend server.`);
@@ -54,6 +54,13 @@ export const api = {
   completeOnboarding: (payload, token) => request("/settings/onboarding", { method: "POST", body: payload, token }),
   addGoal: (payload, token) => request("/settings/goals", { method: "POST", body: payload, token }),
   deleteAccount: (payload, token) => request("/settings/account", { method: "DELETE", body: payload, token }),
+  parseReceipt: (payload, token) => request("/transactions/parse-receipt", { method: "POST", body: payload, token }),
+
+  // Subscription
+  getPlans: (token) => request("/subscription/plans", { token }),
+  createOrder: (planId, token) => request("/subscription/order", { method: "POST", body: { planId }, token }),
+  verifyPayment: (payload, token) => request("/subscription/verify", { method: "POST", body: payload, token }),
+  cancelPlan: (token) => request("/subscription/cancel", { method: "POST", token }),
 
   // Report Builder
   listReports: (token) => request("/reports/builder", { token }),

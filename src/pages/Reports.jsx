@@ -9,6 +9,8 @@ import ChartBox from "../components/ui/ChartBox";
 import ReportBuilder from "./builder/ReportBuilder";
 import { exportCsv, exportExcel, exportPdf } from "../utils/export";
 import { currency } from "../utils/format";
+import { useContext } from "react";
+import { GlobalContext } from "../context";
 
 const MotionBox = motion(Box);
 
@@ -24,7 +26,9 @@ function SummaryCard({ label, value, color }) {
   );
 }
 
-export default function Reports({ analytics, transactions }) {
+export default function Reports({ analytics, transactions, onUpgrade }) {
+  const { user } = useContext(GlobalContext);
+  const canUseBuilder = user?.plan?.tier === "pro";
   const [showBuilder, setShowBuilder] = useState(false);
   const [isExporting, setIsExporting] = useState("");
 
@@ -79,34 +83,64 @@ export default function Reports({ analytics, transactions }) {
   return (
     <VStack align="stretch" spacing={5}>
       {/* Report Builder CTA */}
-      <MotionBox
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        bg="linear-gradient(135deg, #0ea5e9, #6366f1)"
-        borderRadius="14px"
-        p={5}
-        boxShadow="0 4px 24px rgba(14,165,233,0.3)"
-      >
-        <Flex justify="space-between" align="center" flexWrap="wrap" gap={4}>
-          <Box>
-            <Text fontWeight="800" fontSize="lg" color="white">Custom Report Builder</Text>
-            <Text fontSize="sm" color="whiteAlpha.800" mt={1}>
-              Drag & drop widgets to build beautiful financial reports
-            </Text>
-          </Box>
-          <Button
-            leftIcon={<FiLayout />}
-            bg="white"
-            color="brand.600"
-            _hover={{ bg: "whiteAlpha.900" }}
-            borderRadius="10px"
-            fontWeight="700"
-            onClick={() => setShowBuilder(true)}
-          >
-            Open Builder
-          </Button>
-        </Flex>
-      </MotionBox>
+      {canUseBuilder ? (
+        <MotionBox
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          bg="linear-gradient(135deg, #0ea5e9, #6366f1)"
+          borderRadius="14px"
+          p={5}
+          boxShadow="0 4px 24px rgba(14,165,233,0.3)"
+        >
+          <Flex justify="space-between" align="center" flexWrap="wrap" gap={4}>
+            <Box>
+              <Text fontWeight="800" fontSize="lg" color="white">Custom Report Builder</Text>
+              <Text fontSize="sm" color="whiteAlpha.800" mt={1}>
+                Drag & drop widgets to build beautiful financial reports
+              </Text>
+            </Box>
+            <Button
+              leftIcon={<FiLayout />}
+              bg="white"
+              color="brand.600"
+              _hover={{ bg: "whiteAlpha.900" }}
+              borderRadius="10px"
+              fontWeight="700"
+              onClick={() => setShowBuilder(true)}
+            >
+              Open Builder
+            </Button>
+          </Flex>
+        </MotionBox>
+      ) : (
+        <MotionBox
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          bg="linear-gradient(135deg, #8b5cf620, #6366f120)"
+          border="1px dashed"
+          borderColor="#8b5cf640"
+          borderRadius="14px"
+          p={5}
+        >
+          <Flex justify="space-between" align="center" flexWrap="wrap" gap={4}>
+            <Box>
+              <Text fontWeight="800" fontSize="lg">Custom Report Builder</Text>
+              <Text fontSize="sm" color={mutedColor} mt={1}>Available on Expenser Pro</Text>
+            </Box>
+            <Button
+              leftIcon={<FiLayout />}
+              bg="#8b5cf6"
+              color="white"
+              _hover={{ opacity: 0.9 }}
+              borderRadius="10px"
+              fontWeight="700"
+              onClick={onUpgrade}
+            >
+              Upgrade to Pro
+            </Button>
+          </Flex>
+        </MotionBox>
+      )}
 
       {/* Summary cards */}
       <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>

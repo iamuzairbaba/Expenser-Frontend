@@ -24,7 +24,12 @@ export default function GlobalState({ children }) {
   }, []);
 
   const updateUser = useCallback((updatedUser) => {
-    setUser((prev) => ({ ...prev, ...updatedUser }));
+    setUser((prev) => ({
+      ...prev,
+      ...updatedUser,
+      preferences: { ...(prev?.preferences || {}), ...(updatedUser?.preferences || {}) },
+      notifications: { ...(prev?.notifications || {}), ...(updatedUser?.notifications || {}) },
+    }));
   }, []);
 
   useEffect(() => {

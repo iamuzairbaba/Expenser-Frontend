@@ -29,7 +29,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useMemo, useRef, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import {
   FiCreditCard,
   FiEdit2,
@@ -42,7 +42,9 @@ import {
   FiX,
   FiZap,
 } from "react-icons/fi";
-import { autoDetectCategory, parseReceiptMock } from "../utils/autoCategorize";
+import { GlobalContext } from "../context";
+import { autoDetectCategory } from "../utils/autoCategorize";
+import ReceiptScanner from "../components/receipt/ReceiptScanner";
 import { currency, toInputDate, todayInput } from "../utils/format";
 
 const MotionBox = motion(Box);
@@ -168,15 +170,15 @@ function TransactionSkeleton() {
   );
 }
 
-export default function Transactions({ transactions, categories, filters, actions }) {
+export default function Transactions({ transactions, categories, filters, actions, onUpgrade }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [form, setForm] = useState(blank);
   const [editingId, setEditingId] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [receiptParsed, setReceiptParsed] = useState(null);
-  const fileRef = useRef(null);
+  const { user } = useContext(GlobalContext);
+  const canScanReceipt = user?.plan?.tier === "pro";
 
   const bg = useColorModeValue("white", "#111827");
   const border = useColorModeValue("gray.100", "whiteAlpha.100");
@@ -230,33 +232,26 @@ export default function Transactions({ transactions, categories, filters, action
       tags: Array.isArray(item.tags) ? item.tags.join(", ") : item.tags || "",
       recurring: item.recurring || { enabled: false, frequency: "monthly" },
     });
-    setReceiptParsed(null);
     onOpen();
   }
 
   function openNew() {
     setEditingId("");
     setForm(blank);
-    setReceiptParsed(null);
     onOpen();
   }
 
-  function handleReceiptUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const parsed = parseReceiptMock(file.name);
-    setReceiptParsed(parsed);
-    // Pre-fill form
+  function handleReceiptResult(parsed) {
     setForm((current) => {
       const match = categoryList.find(
         (c) => c.name.toLowerCase() === (parsed.category || "").toLowerCase() && c.type === "expense"
       );
       return {
         ...current,
-        amount: parsed.amount,
-        notes: parsed.merchant,
-        merchant: parsed.merchant,
-        date: parsed.date,
+        amount: parsed.amount ?? current.amount,
+        notes: parsed.merchant || current.notes,
+        merchant: parsed.merchant || current.merchant,
+        date: parsed.date || current.date,
         category: match?._id || current.category,
       };
     });
@@ -274,7 +269,6 @@ export default function Transactions({ transactions, categories, filters, action
     if (ok) {
       setForm(blank);
       setEditingId("");
-      setReceiptParsed(null);
       onClose();
     }
   }
@@ -455,31 +449,29 @@ export default function Transactions({ transactions, categories, filters, action
           <ModalBody>
             <form id="txn-form" onSubmit={submit}>
               <VStack spacing={4} align="stretch">
-                {/* Receipt upload */}
+                {/* Receipt scanner */}
                 {!editingId && (
-                  <Box
-                    border="2px dashed"
-                    borderColor={border}
-                    borderRadius="10px"
-                    p={4}
-                    textAlign="center"
-                    cursor="pointer"
-                    onClick={() => fileRef.current?.click()}
-                    _hover={{ borderColor: "brand.400" }}
-                    transition="border-color 0.15s"
-                  >
-                    <input ref={fileRef} type="file" accept="image/*,.pdf" style={{ display: "none" }} onChange={handleReceiptUpload} />
-                    <Icon as={FiUpload} boxSize={5} color={mutedColor} mb={1} />
-                    <Text fontSize="xs" color={mutedColor}>Upload receipt for auto-fill</Text>
-                    {receiptParsed && (
-                      <Flex align="center" justify="center" gap={2} mt={2}>
-                        <Icon as={FiZap} color="brand.500" boxSize={3.5} />
-                        <Text fontSize="xs" color="brand.500" fontWeight="600">
-                          Detected: {receiptParsed.merchant} · {currency(receiptParsed.amount)} · {receiptParsed.confidence}% confidence
-                        </Text>
-                      </Flex>
-                    )}
-                  </Box>
+                  canScanReceipt ? (
+                    <ReceiptScanner
+                      onResult={handleReceiptResult}
+                      categoryList={categoryList}
+                    />
+                  ) : (
+                    <Box
+                      border="2px dashed"
+                      borderColor={border}
+                      borderRadius="10px"
+                      p={4}
+                      textAlign="center"
+                      cursor="pointer"
+                      onClick={onUpgrade}
+                      _hover={{ borderColor: "#8b5cf6" }}
+                      transition="border-color 0.15s"
+                    >
+                      <Icon as={FiUpload} boxSize={5} color="#8b5cf6" mb={1} />
+                      <Text fontSize="xs" color="#8b5cf6" fontWeight="600">Upgrade to Expenser Pro to scan receipts</Text>
+                    </Box>
+                  )
                 )}
 
                 <Grid templateColumns="1fr 1fr" gap={4}>
