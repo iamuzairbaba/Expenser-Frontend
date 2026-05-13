@@ -9,9 +9,9 @@ import {
   useDisclosure, useToast,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
-  FiAlertTriangle, FiBell, FiDownload, FiEye, FiEyeOff,
+  FiAlertTriangle, FiBell, FiCamera, FiDownload, FiEye, FiEyeOff,
   FiGlobe, FiLock, FiMoon, FiShield, FiSun, FiTrash2, FiUser,
 } from "react-icons/fi";
 import { GlobalContext } from "../../context";
@@ -64,14 +64,50 @@ function ToggleRow({ label, description, isChecked, onChange }) {
 // ── Profile ──────────────────────────────────────────────────────────────────
 function ProfileSection({ user, token, onUpdate }) {
   const toast = useToast();
+  const fileInputRef = useRef(null);
   const [form, setForm] = useState({ name: user?.name || "", phone: user?.phone || "", avatar: user?.avatar || "" });
   const [isSaving, setIsSaving] = useState(false);
   const mutedColor = useColorModeValue("gray.500", "gray.400");
 
+  useEffect(() => {
+    setForm({
+      name: user?.name || "",
+      phone: user?.phone || "",
+      avatar: user?.avatar || "",
+    });
+  }, [user?.avatar, user?.name, user?.phone]);
+
+  function handleAvatarFile(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Choose an image file", status: "warning", duration: 2500 });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 1024 * 1024) {
+      toast({ title: "Avatar is too large", description: "Please choose an image under 1 MB.", status: "warning", duration: 3000 });
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => setForm((current) => ({ ...current, avatar: reader.result || "" }));
+    reader.onerror = () => toast({ title: "Could not read image", status: "error", duration: 2500 });
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  }
+
   async function save() {
     setIsSaving(true);
     try {
-      const result = await api.updateProfile(form, token);
+      const result = await api.updateProfile({
+        name: form.name,
+        phone: form.phone.trim(),
+        avatar: form.avatar,
+      }, token);
       onUpdate(result.user);
       toast({ title: "Profile updated", status: "success", duration: 2500 });
     } catch (err) {
@@ -85,9 +121,9 @@ function ProfileSection({ user, token, onUpdate }) {
     <VStack spacing={4} align="stretch">
       <SectionCard title="Profile Information">
         <VStack spacing={5} align="stretch">
-          <Flex align="center" gap={4}>
-            <Avatar size="xl" name={form.name} bg="brand.500" color="white" fontWeight="700" />
-            <Box>
+          <Flex align={{ base: "flex-start", sm: "center" }} gap={4} direction={{ base: "column", sm: "row" }}>
+            <Avatar size="xl" name={form.name} src={form.avatar} bg="brand.500" color="white" fontWeight="700" />
+            <Box flex={1} minW={0}>
               <Text fontSize="sm" fontWeight="700">{form.name}</Text>
               <Text fontSize="xs" color={mutedColor}>{user?.email}</Text>
               <Badge mt={1} colorScheme={user?.provider === "google" ? "blue" : "gray"} fontSize="9px">
@@ -99,6 +135,34 @@ function ProfileSection({ user, token, onUpdate }) {
               >
                 {user?.plan?.tier === "pro" ? "Expenser Pro" : user?.plan?.tier === "tracker" ? "Expenser Tracker" : "Expenser Free"}
               </Badge>
+              <HStack mt={3} spacing={2} flexWrap="wrap">
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  display="none"
+                  onChange={handleAvatarFile}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  leftIcon={<FiCamera />}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Upload Avatar
+                </Button>
+                {form.avatar && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    colorScheme="red"
+                    leftIcon={<FiTrash2 />}
+                    onClick={() => setForm((current) => ({ ...current, avatar: "" }))}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </HStack>
             </Box>
           </Flex>
           <Divider />
@@ -114,6 +178,11 @@ function ProfileSection({ user, token, onUpdate }) {
             <FormControl>
               <FormLabel fontSize="sm" fontWeight="600">Phone Number</FormLabel>
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+1 234 567 8900" />
+            </FormControl>
+            <FormControl gridColumn={{ base: "auto", md: "1 / -1" }}>
+              <FormLabel fontSize="sm" fontWeight="600">Avatar URL</FormLabel>
+              <Input value={form.avatar} onChange={(e) => setForm({ ...form, avatar: e.target.value })} placeholder="https://example.com/avatar.jpg" />
+              <Text fontSize="xs" color={mutedColor} mt={1}>Upload an image or paste an image URL.</Text>
             </FormControl>
           </Grid>
           <Button colorScheme="brand" alignSelf="flex-start" onClick={save} isLoading={isSaving} loadingText="Saving...">

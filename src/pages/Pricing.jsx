@@ -1,7 +1,7 @@
 import {
   Badge, Box, Button, Flex, HStack, Icon, List, ListIcon, ListItem,
   Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter,
-  ModalHeader, ModalOverlay, Text, VStack, useColorModeValue, useDisclosure, useToast,
+  ModalHeader, ModalOverlay, SimpleGrid, Text, VStack, useColorModeValue, useDisclosure, useToast,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useContext, useState } from "react";
@@ -78,12 +78,13 @@ function PlanCard({ plan, currentTier, onUpgrade, isLoading }) {
       bg={bg}
       border="2px solid"
       borderColor={isCurrent ? plan.color : border}
-      borderRadius="16px"
-      p={6}
+      borderRadius="14px"
+      p={{ base: 4, sm: 5, lg: 6 }}
       boxShadow={isCurrent ? `0 0 0 1px ${plan.color}40, 0 8px 32px ${plan.color}20` : "card"}
       position="relative"
-      flex={1}
-      minW="0"
+      h="full"
+      minW={0}
+      w="full"
     >
       {plan.badge && (
         <Badge
@@ -105,7 +106,7 @@ function PlanCard({ plan, currentTier, onUpgrade, isLoading }) {
 
       <VStack align="stretch" spacing={5}>
         <Box>
-          <HStack mb={2}>
+          <HStack mb={2} align="center" flexWrap="wrap">
             <Box w="32px" h="32px" borderRadius="8px" bg={`${plan.color}20`} display="flex" alignItems="center" justifyContent="center">
               <Icon as={plan.icon} color={plan.color} boxSize={4} />
             </Box>
@@ -149,17 +150,19 @@ function PlanCard({ plan, currentTier, onUpgrade, isLoading }) {
             onClick={() => onUpgrade(plan)}
             isLoading={isLoading === plan.id}
             loadingText="Processing..."
+            w="full"
+            whiteSpace="normal"
           >
             Upgrade to {plan.name.split(" ")[1]}
           </Button>
         )}
         {isCurrent && plan.price > 0 && (
-          <Button variant="outline" borderRadius="10px" isDisabled size="sm" color={mutedColor}>
+          <Button variant="outline" borderRadius="10px" isDisabled size="sm" color={mutedColor} w="full">
             Active Plan
           </Button>
         )}
         {plan.price === 0 && isCurrent && (
-          <Button variant="outline" borderRadius="10px" isDisabled size="sm" color={mutedColor}>
+          <Button variant="outline" borderRadius="10px" isDisabled size="sm" color={mutedColor} w="full">
             Current Plan
           </Button>
         )}
@@ -253,17 +256,17 @@ export default function Pricing({ onClose }) {
   }
 
   return (
-    <VStack align="stretch" spacing={6}>
+    <VStack align="stretch" spacing={{ base: 4, md: 6 }} w="full" maxW="1180px" mx="auto">
       {/* Header */}
       <Box textAlign="center">
-        <Text fontSize="2xl" fontWeight="800" letterSpacing="-0.5px">Choose Your Plan</Text>
+        <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="800">Choose Your Plan</Text>
         <Text fontSize="sm" color={mutedColor} mt={1}>
           Unlock powerful features to take control of your finances
         </Text>
       </Box>
 
       {/* Plan cards */}
-      <Flex gap={4} flexWrap={{ base: "wrap", lg: "nowrap" }} align="stretch">
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={4} alignItems="stretch">
         {PLANS.map((plan) => (
           <PlanCard
             key={plan.id}
@@ -273,7 +276,7 @@ export default function Pricing({ onClose }) {
             isLoading={loadingPlan}
           />
         ))}
-      </Flex>
+      </SimpleGrid>
 
       {/* Current plan info + cancel */}
       {currentTier !== "free" && (

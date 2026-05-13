@@ -109,7 +109,7 @@ export default function AppShell({ user, activePage, onPageChange, onLogout, chi
 
         <Box borderTop="1px solid" borderColor={sidebarUserBorder} pt={4} mt={4}>
           <Flex align="center" gap={3} mb={3}>
-            <Avatar size="sm" name={user?.name} bg="brand.500" color="white" fontSize="xs" fontWeight="700" />
+            <Avatar size="sm" name={user?.name} src={user?.avatar} bg="brand.500" color="white" fontSize="xs" fontWeight="700" />
             <Box flex={1} minW={0}>
               <Text fontSize="sm" fontWeight="700" color={nameColor} noOfLines={1}>{user?.name}</Text>
               <Text fontSize="xs" color={mutedColor} noOfLines={1}>{user?.email}</Text>
@@ -182,6 +182,7 @@ export default function AppShell({ user, activePage, onPageChange, onLogout, chi
               display={{ base: "flex", md: "none" }}
               size="sm"
               name={user?.name}
+              src={user?.avatar}
               bg="brand.500"
               color="white"
               fontSize="xs"
